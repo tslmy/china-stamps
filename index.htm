@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Stamp Book</title>
+    <meta name="description" content="An very basic example of how to using the Wookmark jQuery plug-in.">
+    <meta name="author" content="tslmy">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+		<!-- iOS App -->
+		<link rel="apple-touch-startup-image" href="startup.png" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+		<!-- Win8 App -->
+		<meta name="application-name" content="Tslimitic"/> 
+		<meta name="msapplication-TileColor" content="#315191"/> 
+		<meta name="msapplication-TileImage" content="f7ab1e6a-fce9-4ac3-8dc9-d271b9aa05f8.png"/>
+    <!-- CSS Reset -->
+    <link rel="stylesheet" href="css/reset.css">
+    <!-- Global CSS for the page and tiles -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="shortcut icon" href="icon/favicon.ico" type="image/x-icon" />
+	<link rel="apple-touch-icon" href="icon/apple-touch-icon.png" />
+	<link rel="apple-touch-icon" sizes="57x57" href="icon/apple-touch-icon-57x57.png" />
+	<link rel="apple-touch-icon" sizes="72x72" href="icon/apple-touch-icon-72x72.png" />
+	<link rel="apple-touch-icon" sizes="114x114" href="icon/apple-touch-icon-114x114.png" />
+	<link rel="apple-touch-icon" sizes="144x144" href="icon/apple-touch-icon-144x144.png" />
+	<link rel="apple-touch-icon" sizes="57x57" href="icon/apple-touch-icon-60x60.png" />
+	<link rel="apple-touch-icon" sizes="72x72" href="icon/apple-touch-icon-120x120.png" />
+	<link rel="apple-touch-icon" sizes="114x114" href="icon/apple-touch-icon-76x76.png" />
+	<link rel="apple-touch-icon" sizes="144x144" href="icon/apple-touch-icon-152x152.png" />
+    <meta name="msapplication-square70x70logo" content="icon/smalltile.png" />
+    <meta name="msapplication-square150x150logo" content="icon/mediumtile.png" />
+    <meta name="msapplication-wide310x150logo" content="icon/widetile.png" />
+    <meta name="msapplication-square310x310logo" content="icon/largetile.png" />
+
+</head>
+
+<body>
+    <div id="fade" class="black_overlay" onclick="fade_out()">
+        <a id='link' href=''>
+            <div id="light" class="white_content"></div>
+        </a>
+        <script>
+            //And for the lightbox:
+            function show_lightbox(url) {
+                document.getElementById('light').style.backgroundImage = "url('" + url + "')";
+                document.getElementById('link').href = url;
+                document.getElementById('fade').style.display = 'block';
+            };
+
+            function fade_out() {
+                document.getElementById('light').style.backgroundImage = "";
+                document.getElementById('link').href = "";
+                document.getElementById('fade').style.display = 'none';
+            };
+        </script>
+    </div>
+    <div id="container">
+        <header>
+            <h1>Stamp Book</h1>
+            <p>Just some old stamps from China.</p>
+        </header>
+        <div id="main" role="main">
+            <ul id="tiles">
+            </ul>
+        </div>
+        <footer>
+        </footer>
+    </div>
+    <!-- include jQuery -->
+    <script src="libs/jquery.min.js"></script>
+    <!-- Include the imagesLoaded plug-in -->
+    <script src="libs/jquery.imagesloaded.min.js"></script>
+    <!-- Include the plug-in -->
+    <script src="libs/jquery.wookmark.min.js"></script>
+    <!-- Once the page is loaded, initalize the plug-in. -->
+    <script type="text/javascript">
+		(function ($) {
+			//========================================Wrapper START======================================
+			var $tiles = $('#tiles'),
+				$handler = $('li', $tiles),
+				$main = $('#main'),
+				$window = $(window),
+				$document = $(document),
+				$nowPicId = 0;
+			options = {
+				autoResize: true, // This will auto-update the layout when the browser window is resized.
+				container: $main, // Optional, used for some extra CSS styling
+				offset: 0, // Optional, the distance between grid items
+				itemWidth: 200 // Optional, the width of a grid item
+			};
+
+			function prefixInteger(num, length) {
+				return (num / Math.pow(10, length)).toFixed(length).substr(2);
+			}
+
+			function addMore(a) {
+				for (var i = a + 1; i < a + 10; i++) {
+					$thisUrl = 'stamps/' + prefixInteger(i, 4) + '.jpg';
+					$tiles.append('<li draggable><img onclick="show_lightbox(\''+$thisUrl+'\')" width="200" src="'+$thisUrl+'" /></li>');
+				}
+				return a + 10;
+			}
+			/**
+			 * Reinitializes the wookmark handler after all images have loaded
+			 */
+			function applyLayout() {
+				$tiles.imagesLoaded(function () {
+					// Destroy the old handler
+					if ($handler.wookmarkInstance) {
+						$handler.wookmarkInstance.clear();
+					}
+
+					// Create a new layout handler.
+					$handler = $('li', $tiles);
+					$handler.wookmark(options);
+				});
+			}
+
+			/**
+			 * When scrolled all the way to the bottom, add more tiles
+			 */
+			function onScroll() {
+				// Check if we're within 100 pixels of the bottom edge of the broser window.
+				var winHeight = window.innerHeight ? window.innerHeight : $window.height(), // iphone fix
+					closeToBottom = ($window.scrollTop() + winHeight > $document.height() - 100);
+
+				if (closeToBottom) {
+					// Get the first then items from the grid, clone them, and add them to the bottom of the grid
+					$nowPicId = addMore($nowPicId);
+					applyLayout();
+					if ($nowPicId > 2059) {
+						$window.unbind(onScroll);
+					}
+				}
+			};
+			//Init!
+			$nowPicId = addMore($nowPicId);
+			$nowPicId = addMore($nowPicId);
+			$nowPicId = addMore($nowPicId);
+			// Call the layout function for the first time
+			applyLayout();
+
+			// Capture scroll event.
+			$window.bind('scroll.wookmark', onScroll);
+			//========================================Wrapper END======================================
+		})(jQuery);
+	</script>
+</body>
+
+</html>
